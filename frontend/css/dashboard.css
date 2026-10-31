@@ -1,0 +1,21 @@
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.navbar-brand {
+    letter-spacing: 0.5px;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.table th {
+    font-size: 14px;
+    color: #555;
+}
+
+.table td {
+    font-size: 14px;
+}
