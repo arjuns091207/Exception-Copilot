@@ -9,6 +9,7 @@ const app = require("../src/app");
 const exceptionService = require("../src/services/exception.service");
 const supabase = require("../src/config/supabase");
 
+
 let server;
 let baseUrl;
 
@@ -146,4 +147,30 @@ test("GET /api/exceptions rejects users without an authorized role", async () =>
     });
 
     assert.equal(response.status, 403);
+});
+
+test("GET /api/exceptions rejects invalid authentication tokens", async () => {
+    mock.restoreAll();
+
+    mock.method(supabase.auth, "getUser", async () => ({
+        data: { user: null },
+        error: { status: 401 }
+    }));
+
+    const response = await fetch(`${baseUrl}/api/exceptions`, {
+        headers: { Authorization: "Bearer invalid-token" }
+    });
+
+    const body = await response.json();
+
+    assert.equal(response.status, 401);
+    assert.equal(body.success, false);
+});
+
+test("GET /api/exceptions/:code rejects missing authentication", async () => {
+    const response = await fetch(`${baseUrl}/api/exceptions/EX-1001`);
+    const body = await response.json();
+
+    assert.equal(response.status, 401);
+    assert.equal(body.success, false);
 });
