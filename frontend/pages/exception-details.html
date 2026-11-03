@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,7 +23,12 @@
             Exception Copilot
         </a>
 
-        <span class="text-white">Pharma Operations</span>
+        <div class="d-flex align-items-center gap-3">
+    <span id="currentUser" class="text-white"></span>
+    <button id="logoutButton" class="btn btn-outline-light btn-sm">
+        Logout
+    </button>
+</div>
     </nav>
 
     <main class="container py-4">
@@ -71,34 +76,34 @@
 
                         <div class="col-md-6">
                             <strong>Exception ID</strong>
-                            <p id="exceptionId" class="mt-1">—</p>
+                            <p id="exceptionId" class="mt-1">â€”</p>
                         </div>
 
                         <div class="col-md-6">
                             <strong>Partner</strong>
-                            <p id="partnerName" class="mt-1">—</p>
+                            <p id="partnerName" class="mt-1">â€”</p>
                         </div>
 
                         <div class="col-md-6">
                             <strong>Product</strong>
-                            <p id="productName" class="mt-1">—</p>
+                            <p id="productName" class="mt-1">â€”</p>
                         </div>
 
                         <div class="col-md-6">
                             <strong>Lot Number</strong>
-                            <p id="lotNumber" class="mt-1">—</p>
+                            <p id="lotNumber" class="mt-1">â€”</p>
                         </div>
 
                         <div class="col-md-6">
                             <strong>Error Type</strong>
-                            <p id="errorType" class="mt-1">—</p>
+                            <p id="errorType" class="mt-1">â€”</p>
                         </div>
 
                         <div class="col-md-6">
                             <strong>Severity</strong>
                             <p class="mt-1">
                                 <span id="severity" class="badge">
-                                    —
+                                    â€”
                                 </span>
                             </p>
                         </div>
@@ -107,7 +112,7 @@
                             <strong>Status</strong>
                             <p class="mt-1">
                                 <span id="status" class="badge">
-                                    —
+                                    â€”
                                 </span>
                             </p>
                         </div>
@@ -119,7 +124,7 @@
                     <h5 class="fw-bold">Error Description</h5>
 
                     <p id="errorDescription" class="text-muted">
-                        —
+                        â€”
                     </p>
 
                     <hr>
@@ -133,7 +138,7 @@
                     </p>
 
                     <button class="btn btn-primary" disabled>
-                        Analyze with AI — Coming Soon
+                        Analyze with AI â€” Coming Soon
                     </button>
 
                 </div>
@@ -146,8 +151,10 @@
 
     <!-- Application JavaScript -->
     <script src="../js/api.js"></script>
+<script src="../js/auth-guard.js"></script>
     <script src="../js/exception-details.js"></script>
 
 </body>
 
 </html>
+

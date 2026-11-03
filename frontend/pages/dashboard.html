@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="en">
 
@@ -26,7 +26,12 @@
             Exception Copilot
         </a>
 
-        <span class="text-white">Pharma Operations</span>
+        <div class="d-flex align-items-center gap-3">
+    <span id="currentUser" class="text-white"></span>
+    <button id="logoutButton" class="btn btn-outline-light btn-sm">
+        Logout
+    </button>
+</div>
     </nav>
 
     <main class="container-fluid px-4 py-4">
@@ -154,8 +159,10 @@
 
     <!-- Application JavaScript -->
     <script src="../js/api.js"></script>
+<script src="../js/auth-guard.js"></script>
     <script src="../js/dashboard.js"></script>
 
 </body>
 
 </html>
+
