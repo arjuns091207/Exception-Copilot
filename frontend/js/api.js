@@ -101,6 +101,7 @@ async function loginUser(email, password) {
 /**
  * Send an API request with the current access token.
  */
+
 async function authenticatedFetch(url, options = {}) {
     const headers = new Headers(options.headers || {});
     const token = getAccessToken();
@@ -110,14 +111,22 @@ async function authenticatedFetch(url, options = {}) {
     }
 
     try {
-        return await fetch(url, {
+        const response = await fetch(url, {
             ...options,
             headers
         });
+
+        if (response.status === 401) {
+            logoutUser();
+            window.location.replace("../index.html");
+        }
+
+        return response;
     } catch {
         throw new Error("Unable to connect to the backend. Please try again.");
     }
 }
+
 
 /**
  * Fetch all exceptions.
