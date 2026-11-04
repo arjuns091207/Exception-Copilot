@@ -1,23 +1,30 @@
-
-const ollamaProvider = require("../providers/ollama.provider");
-const geminiProvider = require("../providers/gemini.provider");
-
 const AI_PROVIDER = (
     process.env.AI_PROVIDER || "ollama"
 ).toLowerCase();
 
-const providers = {
-    ollama: ollamaProvider,
-    gemini: geminiProvider
-};
+/**
+ * Load only the selected AI provider.
+ * Prevents unused providers from initializing
+ * or requiring their credentials.
+ */
+function loadProvider(providerName) {
+    switch (providerName) {
+        case "ollama":
+            return require("../providers/ollama.provider");
 
-if (!providers[AI_PROVIDER]) {
-    throw new Error(
-        `Unsupported AI provider: ${AI_PROVIDER}`
-    );
+        case "gemini":
+            return require("../providers/gemini.provider");
+
+        default:
+            throw new Error(
+                `Unsupported AI provider: ${providerName}`
+            );
+    }
 }
 
+const provider = loadProvider(AI_PROVIDER);
+
 module.exports = {
-    provider: providers[AI_PROVIDER],
+    provider,
     providerName: AI_PROVIDER
 };
