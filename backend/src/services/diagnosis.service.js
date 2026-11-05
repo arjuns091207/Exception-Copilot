@@ -190,6 +190,10 @@ Rules:
 - If the evidence is insufficient, recommend manual investigation.
 - Confidence must reflect the strength of the available evidence.
   Do not present it as a calibrated probability.
+- Every suggested_fix field must contain a non-empty string.
+- If no database change is justified, proposed_value must be
+  "No change recommended".
+- Never return an empty string or invent a database update.
 
 Exception record:
 ${JSON.stringify(exception)}
