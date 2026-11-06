@@ -174,3 +174,69 @@ test("does not retry authentication errors", () => {
 
     assert.equal(isRetryable(error), false);
 });
+
+test("rejects creating a new serial for DUPLICATE_SERIAL", () => {
+    const diagnosis = {
+        ...validDiagnosis,
+        suggested_fix: {
+            ...validDiagnosis.suggested_fix,
+            action: "create_new_serial"
+        }
+    };
+
+    assert.throws(
+        () => validateDiagnosis(diagnosis, testException),
+        /Unsafe recommendation/
+    );
+});
+
+test("rejects unsupported quarantine status", () => {
+    const diagnosis = {
+        ...validDiagnosis,
+        suggested_fix: {
+            ...validDiagnosis.suggested_fix,
+            field: "status",
+            current_value: "pending",
+            proposed_value: "quarantine"
+        }
+    };
+
+    assert.throws(
+        () => validateDiagnosis(diagnosis, testException),
+        /Invalid status change/
+    );
+});
+
+test("rejects status transitions for duplicate serial errors", () => {
+    const diagnosis = {
+        ...validDiagnosis,
+        suggested_fix: {
+            ...validDiagnosis.suggested_fix,
+            field: "status",
+            current_value: "pending",
+            proposed_value: "resolved"
+        }
+    };
+
+    assert.throws(
+        () => validateDiagnosis(diagnosis, testException),
+        /Invalid status change/
+    );
+});
+
+test("accepts investigation without modifying existing serial", () => {
+    const diagnosis = {
+        ...validDiagnosis,
+        suggested_fix: {
+            action: "investigate_existing_record",
+            field: "serial_number_lookup",
+            current_value: "Unknown",
+            proposed_value: "No change recommended",
+            rationale: "Do not delete or overwrite the existing record."
+        }
+    };
+
+    assert.doesNotThrow(
+        () => validateDiagnosis(diagnosis, testException)
+    );
+});

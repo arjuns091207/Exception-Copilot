@@ -3,6 +3,18 @@ const { provider, providerName } = require("../config/ai");
 
 const MAX_ATTEMPTS = 3;
 
+const ALLOWED_EXCEPTION_STATUSES = [
+    "pending",
+    "analyzed",
+    "approved",
+    "rejected",
+    "validating",
+    "processing",
+    "sent",
+    "resolved",
+    "failed"
+];
+
 const diagnosisSchema = {
     type: "object",
     properties: {
@@ -37,7 +49,7 @@ const diagnosisSchema = {
     additionalProperties: false
 };
 
-function validateDiagnosis(diagnosis) {
+function validateDiagnosis(diagnosis, exception = {}) {
     if (
         !diagnosis ||
         typeof diagnosis !== "object" ||
@@ -67,7 +79,9 @@ function validateDiagnosis(diagnosis) {
         typeof diagnosis.root_cause !== "string" ||
         !diagnosis.root_cause.trim()
     ) {
-        throw new Error("Diagnosis explanation or root cause is missing");
+        throw new Error(
+            "Diagnosis explanation or root cause is missing"
+        );
     }
 
     if (
@@ -109,7 +123,41 @@ function validateDiagnosis(diagnosis) {
             typeof fix[field] !== "string" ||
             !fix[field].trim()
         ) {
-            throw new Error(`Invalid suggested fix field: ${field}`);
+            throw new Error(
+                `Invalid suggested fix field: ${field}`
+            );
+        }
+    }
+
+    // Error-code-specific semantic validation.
+    if (exception.error_code === "DUPLICATE_SERIAL") {
+        const unsafePatterns =
+            /record[_\s-]?not[_\s-]?found|(?:create|generate|issue)[_\s-]*(?:a[_\s-]*)?(?:new[_\s-]*)?serial|overwrite|delete|remove/i;
+
+        const actionAndProposal = [
+            fix.action,
+            fix.proposed_value
+        ].join(" ");
+
+        if (unsafePatterns.test(actionAndProposal)) {
+            throw new Error(
+                "Unsafe recommendation for DUPLICATE_SERIAL"
+            );
+        }
+
+        if (fix.field.toLowerCase() === "status") {
+            const currentStatus = fix.current_value.toLowerCase();
+            const proposedStatus = fix.proposed_value.toLowerCase();
+
+            if (
+                !ALLOWED_EXCEPTION_STATUSES.includes(currentStatus) ||
+                !ALLOWED_EXCEPTION_STATUSES.includes(proposedStatus) ||
+                currentStatus !== proposedStatus
+            ) {
+                throw new Error(
+                    "Invalid status change recommendation for DUPLICATE_SERIAL"
+                );
+            }
         }
     }
 
@@ -230,7 +278,9 @@ ${JSON.stringify(exception)}
         typeof response.text !== "string" ||
         !response.text.trim()
     ) {
-        throw new Error(`${providerName} returned an empty diagnosis`);
+        throw new Error(
+            `${providerName} returned an empty diagnosis`
+        );
     }
 
     let diagnosis;
@@ -238,10 +288,12 @@ ${JSON.stringify(exception)}
     try {
         diagnosis = JSON.parse(response.text);
     } catch {
-        throw new Error(`${providerName} returned invalid JSON`);
+        throw new Error(
+            `${providerName} returned invalid JSON`
+        );
     }
 
-    return validateDiagnosis(diagnosis);
+    return validateDiagnosis(diagnosis, exception);
 }
 
 module.exports = {
