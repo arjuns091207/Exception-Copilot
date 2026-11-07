@@ -103,3 +103,23 @@ test("maps unexpected database failures to server errors", async () => {
         { status: 500 }
     );
 });
+
+test("rejects an approval RPC response with no confirmation data", async () => {
+    mock.method(supabase, "rpc", async () => ({
+        data: null,
+        error: null
+    }));
+
+    await assert.rejects(
+        approvalService.decideException({
+            exceptionCode: "EX-1001",
+            analysisId: "analysis-uuid",
+            userId: "reviewer-uuid",
+            decision: "approved"
+        }),
+        {
+            status: 500,
+            message: "Approval decision returned no confirmation"
+        }
+    );
+});

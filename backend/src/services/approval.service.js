@@ -39,6 +39,12 @@ async function decideException({
         throw failure;
     }
 
+    if (!data) {
+        const failure = new Error("Approval decision returned no confirmation");
+        failure.status = 500;
+        throw failure;
+    }
+
     return data;
 }
 
