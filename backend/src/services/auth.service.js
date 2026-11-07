@@ -2,7 +2,6 @@ const supabaseAuth = require("../config/supabase-auth");
 const supabase = require("../config/supabase");
 
 async function loginUser(email, password) {
-    // Authenticate the user through Supabase Auth
     const { data, error } = await supabaseAuth.auth.signInWithPassword({
         email,
         password
@@ -19,7 +18,6 @@ async function loginUser(email, password) {
         throw new Error("Unable to create user session");
     }
 
-    // Retrieve the user's role from our public.users table
     const { data: profile, error: profileError } = await supabase
         .from("users")
         .select("id, full_name, role")
@@ -49,6 +47,19 @@ async function loginUser(email, password) {
     };
 }
 
+async function requestPasswordRecovery(email) {
+    const redirectTo = `${process.env.FRONTEND_URL}/pages/reset-password.html`;
+
+    const { error } = await supabaseAuth.auth.resetPasswordForEmail(email, {
+        redirectTo
+    });
+
+    if (error) {
+        throw error;
+    }
+}
+
 module.exports = {
-    loginUser
+    loginUser,
+    requestPasswordRecovery
 };

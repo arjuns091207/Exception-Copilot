@@ -42,6 +42,34 @@ async function login(req, res) {
     }
 }
 
+async function recoverPassword(req, res) {
+    const { email } = req.body;
+
+    if (!email || typeof email !== "string" || !email.trim()) {
+        return res.status(400).json({
+            success: false,
+            message: "A valid email is required"
+        });
+    }
+
+    try {
+        await authService.requestPasswordRecovery(email.trim());
+
+        return res.status(200).json({
+            success: true,
+            message: "If the account exists, a recovery email has been sent."
+        });
+    } catch (error) {
+        console.error("Password recovery error:", error.message);
+
+        return res.status(200).json({
+            success: true,
+            message: "If the account exists, a recovery email has been sent."
+        });
+    }
+}
+
 module.exports = {
-    login
+    login,
+    recoverPassword
 };

@@ -121,3 +121,68 @@ test("login route returns user and session after successful login", async () => 
     }
 });
 
+
+test("password recovery rejects a missing email", async () => {
+    const { server, url } = await startServer();
+
+    try {
+        const response = await fetch(`${url}/api/auth/recover`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+        });
+
+        const body = await response.json();
+
+        assert.equal(response.status, 400);
+        assert.equal(body.success, false);
+    } finally {
+        await stopServer(server);
+    }
+});
+
+test("password recovery returns a generic success response", async () => {
+    mock.method(authService, "requestPasswordRecovery", async () => {});
+
+    const { server, url } = await startServer();
+
+    try {
+        const response = await fetch(`${url}/api/auth/recover`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: "test@example.com" })
+        });
+
+        const body = await response.json();
+
+        assert.equal(response.status, 200);
+        assert.equal(body.success, true);
+        assert.match(body.message, /If the account exists/);
+    } finally {
+        await stopServer(server);
+    }
+});
+
+test("password recovery hides service errors from the client", async () => {
+    mock.method(authService, "requestPasswordRecovery", async () => {
+        throw new Error("Simulated Supabase failure");
+    });
+
+    const { server, url } = await startServer();
+
+    try {
+        const response = await fetch(`${url}/api/auth/recover`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: "test@example.com" })
+        });
+
+        const body = await response.json();
+
+        assert.equal(response.status, 200);
+        assert.equal(body.success, true);
+        assert.match(body.message, /If the account exists/);
+    } finally {
+        await stopServer(server);
+    }
+});
