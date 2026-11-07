@@ -5,7 +5,7 @@ function createAuthenticate(supabaseClient) {
     return async function authenticate(req, res, next) {
         const authHeader = req.headers.authorization;
 
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        if (!authHeader || !/^Bearer\s+/i.test(authHeader)) {
             return res.status(401).json({
                 success: false,
                 message: "Authentication token is required"

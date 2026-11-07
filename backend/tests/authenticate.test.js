@@ -101,3 +101,33 @@ test("returns 503 when Supabase authentication is unavailable", async () => {
     assert.equal(mocks.res.statusCode, 503);
     assert.equal(mocks.getNextCalled(), false);
 });
+
+test("accepts lowercase bearer authentication scheme", async () => {
+    const mocks = createMocks({
+        data: {
+            user: {
+                id: "user-123",
+                email: "operator@example.com"
+            }
+        },
+        error: null
+    });
+
+    mocks.req.headers.authorization = "bearer valid-token";
+
+    await mocks.middleware(mocks.req, mocks.res, mocks.next);
+
+    assert.equal(mocks.getNextCalled(), true);
+    assert.equal(mocks.req.user.id, "user-123");
+});
+
+test("rejects bearer headers containing only whitespace", async () => {
+    const mocks = createMocks({ data: {}, error: null });
+
+    mocks.req.headers.authorization = "Bearer    ";
+
+    await mocks.middleware(mocks.req, mocks.res, mocks.next);
+
+    assert.equal(mocks.res.statusCode, 401);
+    assert.equal(mocks.getNextCalled(), false);
+});
