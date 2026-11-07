@@ -14,7 +14,9 @@ async function decideException({
             p_analysis_id: analysisId,
             p_user_id: userId,
             p_decision: decision,
-            p_reason: reason || null
+            p_reason: typeof reason === "string" && reason.trim()
+                ? reason.trim()
+                : null
         }
     );
 

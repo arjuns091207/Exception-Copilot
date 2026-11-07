@@ -123,3 +123,18 @@ test("rejects an approval RPC response with no confirmation data", async () => {
         }
     );
 });
+
+test("normalizes whitespace-only approval reasons to null", async () => {
+    mock.method(supabase, "rpc", async (name, args) => {
+        assert.equal(args.p_reason, null);
+        return { data: { decision: "approved" }, error: null };
+    });
+
+    await approvalService.decideException({
+        exceptionCode: "EX-1001",
+        analysisId: "analysis-uuid",
+        userId: "reviewer-uuid",
+        decision: "approved",
+        reason: "   "
+    });
+});
