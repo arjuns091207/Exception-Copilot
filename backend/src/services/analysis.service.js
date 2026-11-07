@@ -42,8 +42,12 @@ async function createAnalysis(exceptionCode) {
 
     const modelName = getModelName();
 
-    if (modelName.length > 100) {
-        throw new Error("Configured AI model name exceeds 100 characters");
+    if (
+        typeof modelName !== "string" ||
+        !modelName.trim() ||
+        modelName.trim().length > 100
+    ) {
+        throw new Error("Configured AI model name must contain 1-100 characters");
     }
 
     // The backend persists the validated AI recommendation.
@@ -55,7 +59,7 @@ async function createAnalysis(exceptionCode) {
             root_cause: diagnosis.root_cause,
             confidence: diagnosis.confidence,
             suggested_fix: diagnosis.suggested_fix,
-            model_name: modelName
+            model_name: modelName.trim()
         })
         .select(
             "id, exception_id, explanation, root_cause, confidence, suggested_fix, model_name, created_at"

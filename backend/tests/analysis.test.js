@@ -148,3 +148,67 @@ test("propagates database persistence failures", async () => {
         /Database unavailable/
     );
 });
+
+test("rejects an empty configured AI model name", async () => {
+    const originalModel = process.env.OLLAMA_MODEL;
+    process.env.OLLAMA_MODEL = "   ";
+
+    try {
+        mock.method(
+            exceptionService,
+            "getExceptionByCode",
+            async () => exception
+        );
+
+        mock.method(
+            diagnosisService,
+            "analyzeException",
+            async () => diagnosis
+        );
+
+        await assert.rejects(
+            analysisService.createAnalysis("EX-1001"),
+            /model name must contain 1-100 characters/
+        );
+    } finally {
+        if (originalModel === undefined) {
+            delete process.env.OLLAMA_MODEL;
+        } else {
+            process.env.OLLAMA_MODEL = originalModel;
+        }
+    }
+});
+
+test("trims whitespace from configured AI model name before persistence", async () => {
+    const originalModel = process.env.OLLAMA_MODEL;
+    process.env.OLLAMA_MODEL = "  qwen3.5:4b  ";
+
+    try {
+        mock.method(
+            exceptionService,
+            "getExceptionByCode",
+            async () => exception
+        );
+
+        mock.method(
+            diagnosisService,
+            "analyzeException",
+            async () => diagnosis
+        );
+
+        mockInsert({
+            data: { id: "analysis-uuid-002" },
+            error: null
+        });
+
+        await analysisService.createAnalysis("EX-1001");
+
+        assert.equal(mock.insertedPayload.model_name, "qwen3.5:4b");
+    } finally {
+        if (originalModel === undefined) {
+            delete process.env.OLLAMA_MODEL;
+        } else {
+            process.env.OLLAMA_MODEL = originalModel;
+        }
+    }
+});
