@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -7,6 +8,7 @@
 
     <title>Exception Copilot | Login</title>
 
+    <!-- Bootstrap CSS -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -15,6 +17,7 @@
 
 <body class="bg-light">
 
+    <!-- Navigation -->
     <nav class="navbar navbar-dark bg-dark px-4">
         <a class="navbar-brand fw-bold" href="./index.html">
             Exception Copilot
@@ -25,12 +28,14 @@
         </span>
     </nav>
 
+    <!-- Main Login Section -->
     <main class="container py-5">
 
         <div class="row justify-content-center">
 
             <div class="col-md-6 col-lg-5">
 
+                <!-- Page Heading -->
                 <div class="text-center mb-4">
                     <h1 class="fw-bold">Welcome Back</h1>
 
@@ -39,6 +44,7 @@
                     </p>
                 </div>
 
+                <!-- Login Card -->
                 <div class="card shadow-sm border-0">
 
                     <div class="card-body p-4 p-md-5">
@@ -47,14 +53,17 @@
                             Sign In
                         </h4>
 
+                        <!-- Login Feedback -->
                         <div
                             id="loginMessage"
                             class="alert d-none"
                             role="alert"
                         ></div>
 
+                        <!-- Login Form -->
                         <form id="loginForm">
 
+                            <!-- Email -->
                             <div class="mb-3">
 
                                 <label
@@ -75,6 +84,7 @@
 
                             </div>
 
+                            <!-- Password -->
                             <div class="mb-4">
 
                                 <label
@@ -95,6 +105,7 @@
 
                             </div>
 
+                            <!-- Submit Button -->
                             <button
                                 type="submit"
                                 id="loginButton"
@@ -103,12 +114,19 @@
                                 Sign In
                             </button>
 
+                            <div class="text-end mt-3">
+                                <a href="#" id="forgotPasswordLink" class="text-primary small">
+                                    Forgot Password?
+                                </a>
+                            </div>
+
                         </form>
 
                     </div>
 
                 </div>
 
+                <!-- Footer -->
                 <p class="text-center text-secondary small mt-4">
                     Authorized pharmaceutical operations personnel only.
                 </p>
@@ -118,6 +136,10 @@
         </div>
 
     </main>
+
+    <!-- JavaScript Dependencies -->
+    <!-- Supabase must load before application scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script src="./js/api.js"></script>
     <script src="./js/auth.js"></script>
