@@ -145,3 +145,44 @@ test("rejects successful authentication responses without a user", async () => {
     assert.equal(mocks.res.statusCode, 401);
     assert.equal(mocks.getNextCalled(), false);
 });
+
+test("passes only the extracted token to Supabase", async () => {
+    let receivedToken = null;
+
+    const supabaseMock = {
+        auth: {
+            getUser: async (token) => {
+                receivedToken = token;
+
+                return {
+                    data: {
+                        user: {
+                            id: "user-123",
+                            email: "reviewer@example.com"
+                        }
+                    },
+                    error: null
+                };
+            }
+        }
+    };
+
+    const middleware = createAuthenticate(supabaseMock);
+
+    const mocks = createMocks({
+        data: {
+            user: {
+                id: "user-123",
+                email: "reviewer@example.com"
+            }
+        },
+        error: null
+    });
+
+    mocks.req.headers.authorization = "Bearer reviewer-token-123";
+
+    await middleware(mocks.req, mocks.res, mocks.next);
+
+    assert.equal(receivedToken, "reviewer-token-123");
+    assert.equal(mocks.getNextCalled(), true);
+});
