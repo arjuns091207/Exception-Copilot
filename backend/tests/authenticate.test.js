@@ -131,3 +131,17 @@ test("rejects bearer headers containing only whitespace", async () => {
     assert.equal(mocks.res.statusCode, 401);
     assert.equal(mocks.getNextCalled(), false);
 });
+
+test("rejects successful authentication responses without a user", async () => {
+    const mocks = createMocks({
+        data: { user: null },
+        error: null
+    });
+
+    mocks.req.headers.authorization = "Bearer valid-token";
+
+    await mocks.middleware(mocks.req, mocks.res, mocks.next);
+
+    assert.equal(mocks.res.statusCode, 401);
+    assert.equal(mocks.getNextCalled(), false);
+});
