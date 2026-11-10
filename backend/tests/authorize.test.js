@@ -149,3 +149,19 @@ test("rejects a reviewer from admin-only routes", async () => {
     assert.equal(mocks.res.body.message, "Insufficient permissions");
     assert.equal(mocks.getNextCalled(), false);
 });
+
+test("rejects all users when no roles are explicitly allowed", async () => {
+    const mocks = createMocks({
+        data: {
+            id: "user-123",
+            role: "admin"
+        },
+        error: null
+    }, []);
+
+    await mocks.middleware(mocks.req, mocks.res, mocks.next);
+
+    assert.equal(mocks.res.statusCode, 403);
+    assert.equal(mocks.res.body.message, "Insufficient permissions");
+    assert.equal(mocks.getNextCalled(), false);
+});
