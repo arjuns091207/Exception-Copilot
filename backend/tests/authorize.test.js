@@ -11,12 +11,18 @@ const {
 } = require("../src/middleware/authorize");
 
 function createMocks(profileResult, roles = ["admin"]) {
+    let queriedUserId = null;
+
     const supabaseMock = {
         from: () => ({
             select: () => ({
-                eq: () => ({
-                    maybeSingle: async () => profileResult
-                })
+                eq: (column, value) => {
+                    queriedUserId = value;
+
+                    return {
+                        maybeSingle: async () => profileResult
+                    };
+                }
             })
         })
     };
@@ -51,7 +57,8 @@ function createMocks(profileResult, roles = ["admin"]) {
         req,
         res,
         next,
-        getNextCalled: () => nextCalled
+        getNextCalled: () => nextCalled,
+        getQueriedUserId: () => queriedUserId
     };
 }
 
@@ -164,4 +171,20 @@ test("rejects all users when no roles are explicitly allowed", async () => {
     assert.equal(mocks.res.statusCode, 403);
     assert.equal(mocks.res.body.message, "Insufficient permissions");
     assert.equal(mocks.getNextCalled(), false);
+});
+
+test("checks permissions using the authenticated user's ID", async () => {
+    const mocks = createMocks({
+        data: {
+            id: "user-123",
+            role: "reviewer"
+        },
+        error: null
+    }, ["reviewer"]);
+
+    await mocks.middleware(mocks.req, mocks.res, mocks.next);
+
+    
+    assert.equal(mocks.getQueriedUserId(), "user-123");
+    assert.equal(mocks.getNextCalled(), true);
 });
