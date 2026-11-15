@@ -205,3 +205,79 @@ test("POST /api/exceptions/:code/decision rejects operators", async () => {
     assert.equal(body.success, false);
     assert.equal(rpcCalled, false);
 });
+
+test("POST /api/exceptions/:code/decision allows reviewers to approve", async () => {
+    mock.restoreAll();
+
+    const reviewerId = "reviewer-123";
+    const analysisId = "c31eeb13-3f0d-4ebd-83f2-49918866a388";
+
+    let rpcArguments = null;
+
+    mock.method(supabase.auth, "getUser", async () => ({
+        data: {
+            user: {
+                id: reviewerId,
+                email: "reviewer@example.com"
+            }
+        },
+        error: null
+    }));
+
+    mock.method(supabase, "from", () => ({
+        select: () => ({
+            eq: () => ({
+                maybeSingle: async () => ({
+                    data: {
+                        id: reviewerId,
+                        role: "reviewer"
+                    },
+                    error: null
+                })
+            })
+        })
+    }));
+
+    mock.method(supabase, "rpc", async (name, args) => {
+        assert.equal(name, "decide_exception_approval");
+        rpcArguments = args;
+
+        return {
+            data: {
+                approval_id: "approval-123",
+                exception_id: "exception-123",
+                analysis_id: analysisId,
+                decision: "approved"
+            },
+            error: null
+        };
+    });
+
+    const response = await fetch(
+        `${baseUrl}/api/exceptions/EX-1001/decision`,
+        {
+            method: "POST",
+            headers: {
+                ...authHeaders,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                analysisId,
+                decision: "approved",
+                reason: "Recommendation verified"
+            })
+        }
+    );
+
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.success, true);
+    assert.equal(body.data.decision, "approved");
+
+    assert.equal(rpcArguments.p_exception_code, "EX-1001");
+    assert.equal(rpcArguments.p_analysis_id, analysisId);
+    assert.equal(rpcArguments.p_user_id, reviewerId);
+    assert.equal(rpcArguments.p_decision, "approved");
+    assert.equal(rpcArguments.p_reason, "Recommendation verified");
+});
