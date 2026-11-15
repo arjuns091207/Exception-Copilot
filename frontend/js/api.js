@@ -166,3 +166,51 @@ async function fetchExceptionByCode(exceptionCode) {
 
     return result.data;
 }
+
+
+/**
+ * Generate and persist an AI analysis for an exception.
+ */
+async function analyzeException(exceptionCode) {
+    const response = await authenticatedFetch(
+        `${API_BASE_URL}/exceptions/${encodeURIComponent(exceptionCode)}/analyze`,
+        {
+            method: "POST"
+        }
+    );
+
+    const result = await handleApiResponse(response);
+
+    if (!result.data || typeof result.data.id !== "string") {
+        throw new Error("Invalid AI analysis received from the server.");
+    }
+
+    return result.data;
+}
+
+/**
+ * Submit a reviewer/admin approval decision.
+ */
+async function submitExceptionDecision(
+    exceptionCode,
+    analysisId,
+    decision,
+    reason = null
+) {
+    const response = await authenticatedFetch(
+        `${API_BASE_URL}/exceptions/${encodeURIComponent(exceptionCode)}/decision`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                analysisId,
+                decision,
+                reason
+            })
+        }
+    );
+
+    return await handleApiResponse(response);
+}
