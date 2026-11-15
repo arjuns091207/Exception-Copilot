@@ -174,3 +174,34 @@ test("GET /api/exceptions/:code rejects missing authentication", async () => {
     assert.equal(response.status, 401);
     assert.equal(body.success, false);
 });
+
+test("POST /api/exceptions/:code/decision rejects operators", async () => {
+    let rpcCalled = false;
+
+    mock.method(supabase, "rpc", async () => {
+        rpcCalled = true;
+        return { data: null, error: null };
+    });
+
+    const response = await fetch(
+        `${baseUrl}/api/exceptions/EX-1001/decision`,
+        {
+            method: "POST",
+            headers: {
+                ...authHeaders,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                analysisId: "c31eeb13-3f0d-4ebd-83f2-49918866a388",
+                decision: "approved",
+                reason: "Validated"
+            })
+        }
+    );
+
+    const body = await response.json();
+
+    assert.equal(response.status, 403);
+    assert.equal(body.success, false);
+    assert.equal(rpcCalled, false);
+});
