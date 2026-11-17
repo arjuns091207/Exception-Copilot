@@ -281,3 +281,63 @@ test("POST /api/exceptions/:code/decision allows reviewers to approve", async ()
     assert.equal(rpcArguments.p_decision, "approved");
     assert.equal(rpcArguments.p_reason, "Recommendation verified");
 });
+
+
+test("POST /api/exceptions/:code/decision rejects invalid decisions", async () => {
+    mock.restoreAll();
+
+    const reviewerId = "reviewer-123";
+    let rpcCalled = false;
+
+    mock.method(supabase.auth, "getUser", async () => ({
+        data: {
+            user: {
+                id: reviewerId,
+                email: "reviewer@example.com"
+            }
+        },
+        error: null
+    }));
+
+    mock.method(supabase, "from", () => ({
+        select: () => ({
+            eq: () => ({
+                maybeSingle: async () => ({
+                    data: {
+                        id: reviewerId,
+                        role: "reviewer"
+                    },
+                    error: null
+                })
+            })
+        })
+    }));
+
+    mock.method(supabase, "rpc", async () => {
+        rpcCalled = true;
+        return { data: null, error: null };
+    });
+
+    const response = await fetch(
+        `${baseUrl}/api/exceptions/EX-1001/decision`,
+        {
+            method: "POST",
+            headers: {
+                ...authHeaders,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                analysisId: "c31eeb13-3f0d-4ebd-83f2-49918866a388",
+                decision: "executed",
+                reason: "Invalid decision"
+            })
+        }
+    );
+
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(body.success, false);
+    assert.equal(body.message, "Decision must be approved or rejected");
+    assert.equal(rpcCalled, false);
+});
