@@ -240,3 +240,15 @@ test("accepts investigation without modifying existing serial", () => {
         () => validateDiagnosis(diagnosis, testException)
     );
 });
+
+test("rejects negative diagnosis confidence", () => {
+    const diagnosis = {
+        ...validDiagnosis,
+        confidence: -1
+    };
+
+    assert.throws(
+        () => validateDiagnosis(diagnosis),
+        /Invalid diagnosis confidence/
+    );
+});
