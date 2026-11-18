@@ -138,3 +138,18 @@ test("normalizes whitespace-only approval reasons to null", async () => {
         reason: "   "
     });
 });
+
+test("trims approval reasons before submitting them", async () => {
+    mock.method(supabase, "rpc", async (name, args) => {
+        assert.equal(args.p_reason, "Validated by reviewer");
+        return { data: { decision: "approved" }, error: null };
+    });
+
+    await approvalService.decideException({
+        exceptionCode: "EX-1001",
+        analysisId: "analysis-uuid",
+        userId: "reviewer-uuid",
+        decision: "approved",
+        reason: "  Validated by reviewer  "
+    });
+});
