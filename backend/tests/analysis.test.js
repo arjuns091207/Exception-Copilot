@@ -212,3 +212,29 @@ test("trims whitespace from configured AI model name before persistence", async 
         }
     }
 });
+
+test("rejects an analysis persistence response with no confirmation data", async () => {
+    mock.method(
+        exceptionService,
+        "getExceptionByCode",
+        async () => exception
+    );
+
+    mock.method(
+        diagnosisService,
+        "analyzeException",
+        async () => diagnosis
+    );
+
+    mockInsert({
+        data: null,
+        error: null
+    });
+
+    await assert.rejects(
+        analysisService.createAnalysis("EX-1001"),
+        {
+            message: "Analysis persistence returned no confirmation data"
+        }
+    );
+});

@@ -70,6 +70,10 @@ async function createAnalysis(exceptionCode) {
         throw error;
     }
 
+    if (!data) {
+        throw new Error("Analysis persistence returned no confirmation data");
+    }
+
     return data;
 }
 
