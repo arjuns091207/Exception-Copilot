@@ -153,3 +153,23 @@ test("trims approval reasons before submitting them", async () => {
         reason: "  Validated by reviewer  "
     });
 });
+
+test("uses a fallback message when the database error has no message", async () => {
+    mock.method(supabase, "rpc", async () => ({
+        data: null,
+        error: {}
+    }));
+
+    await assert.rejects(
+        approvalService.decideException({
+            exceptionCode: "EX-1001",
+            analysisId: "analysis-uuid",
+            userId: "reviewer-uuid",
+            decision: "approved"
+        }),
+        {
+            status: 500,
+            message: "Approval decision failed"
+        }
+    );
+});
