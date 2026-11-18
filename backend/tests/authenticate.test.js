@@ -186,3 +186,30 @@ test("passes only the extracted token to Supabase", async () => {
     assert.equal(receivedToken, "reviewer-token-123");
     assert.equal(mocks.getNextCalled(), true);
 });
+
+test("rejects authorization headers using unsupported schemes", async () => {
+    let supabaseCalled = false;
+
+    const supabaseMock = {
+        auth: {
+            getUser: async () => {
+                supabaseCalled = true;
+                return {
+                    data: { user: null },
+                    error: null
+                };
+            }
+        }
+    };
+
+    const middleware = createAuthenticate(supabaseMock);
+    const mocks = createMocks({ data: {}, error: null });
+
+    mocks.req.headers.authorization = "Basic credentials";
+
+    await middleware(mocks.req, mocks.res, mocks.next);
+
+    assert.equal(mocks.res.statusCode, 401);
+    assert.equal(mocks.getNextCalled(), false);
+    assert.equal(supabaseCalled, false);
+});
