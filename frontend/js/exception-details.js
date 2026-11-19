@@ -2,11 +2,9 @@
 document.addEventListener("DOMContentLoaded", loadExceptionDetails);
 
 let currentExceptionCode = null;
+let currentException = null;
 let currentAnalysis = null;
 
-/**
- * Load the selected exception from the backend.
- */
 async function loadExceptionDetails() {
     const params = new URLSearchParams(window.location.search);
     currentExceptionCode = params.get("id");
@@ -21,9 +19,9 @@ async function loadExceptionDetails() {
     }
 
     try {
-        const exception = await fetchExceptionByCode(currentExceptionCode);
+        currentException = await fetchExceptionByCode(currentExceptionCode);
 
-        displayException(exception);
+        displayException(currentException);
 
         loadingMessage.classList.add("d-none");
         detailsContent.classList.remove("d-none");
@@ -31,6 +29,14 @@ async function loadExceptionDetails() {
         document
             .getElementById("analyzeButton")
             .addEventListener("click", handleAnalyze);
+
+        document
+            .getElementById("approveButton")
+            .addEventListener("click", () => handleDecision("approved"));
+
+        document
+            .getElementById("rejectButton")
+            .addEventListener("click", () => handleDecision("rejected"));
 
     } catch (error) {
         console.error("Exception details error:", error);
@@ -46,9 +52,12 @@ async function loadExceptionDetails() {
     }
 }
 
-/**
- * Generate AI analysis.
- */
+function canReview() {
+    const user = getCurrentUser();
+
+    return user && ["reviewer", "admin"].includes(user.role);
+}
+
 async function handleAnalyze() {
     const button = document.getElementById("analyzeButton");
     const loading = document.getElementById("analysisLoading");
@@ -62,12 +71,21 @@ async function handleAnalyze() {
     error.classList.add("d-none");
     content.classList.add("d-none");
 
+    document.getElementById("reviewerControls").classList.add("d-none");
+
     try {
         currentAnalysis = await analyzeException(currentExceptionCode);
 
         displayAnalysis(currentAnalysis);
 
         content.classList.remove("d-none");
+
+        if (
+            canReview() &&
+            ["pending", "analyzed"].includes(currentException.status)
+        ) {
+            document.getElementById("reviewerControls").classList.remove("d-none");
+        }
 
     } catch (err) {
         console.error("AI analysis error:", err);
@@ -82,9 +100,68 @@ async function handleAnalyze() {
     }
 }
 
-/**
- * Safely display AI analysis.
- */
+async function handleDecision(decision) {
+    if (
+        !currentAnalysis ||
+        !currentAnalysis.id ||
+        !canReview() ||
+        !["approved", "rejected"].includes(decision)
+    ) {
+        return;
+    }
+
+    const approveButton = document.getElementById("approveButton");
+    const rejectButton = document.getElementById("rejectButton");
+    const loading = document.getElementById("decisionLoading");
+    const error = document.getElementById("decisionError");
+    const success = document.getElementById("decisionSuccess");
+    const reasonInput = document.getElementById("reviewReason");
+
+    approveButton.disabled = true;
+    rejectButton.disabled = true;
+
+    loading.classList.remove("d-none");
+    error.classList.add("d-none");
+    success.classList.add("d-none");
+
+    try {
+        const reason = reasonInput.value.trim() || null;
+
+        const result = await submitExceptionDecision(
+            currentExceptionCode,
+            currentAnalysis.id,
+            decision,
+            reason
+        );
+
+        currentException.status = decision;
+
+        const statusElement = document.getElementById("status");
+
+        statusElement.textContent = decision.toUpperCase();
+        statusElement.className = getStatusClass(decision);
+
+        success.textContent =
+            result.message || `Exception ${decision} successfully.`;
+
+        success.classList.remove("d-none");
+
+        document.getElementById("reviewerControls").classList.add("d-none");
+
+    } catch (err) {
+        console.error("Reviewer decision error:", err);
+
+        error.textContent = err.message;
+        error.classList.remove("d-none");
+
+        approveButton.disabled = false;
+        rejectButton.disabled = false;
+
+    } finally {
+        loading.classList.add("d-none");
+    }
+}
+
 function displayAnalysis(analysis) {
     const fix = analysis.suggested_fix;
 
@@ -120,9 +197,6 @@ function displayAnalysis(analysis) {
         fix.rationale;
 }
 
-/**
- * Display the retrieved exception.
- */
 function displayException(exception) {
     document.getElementById("exceptionId").textContent =
         exception.exception_code;
@@ -155,9 +229,6 @@ function displayException(exception) {
         getStatusClass(exception.status);
 }
 
-/**
- * Get Bootstrap severity badge class.
- */
 function getSeverityClass(severity) {
     const classes = {
         critical: "badge bg-danger",
@@ -169,9 +240,6 @@ function getSeverityClass(severity) {
     return classes[severity] || "badge bg-secondary";
 }
 
-/**
- * Get Bootstrap status badge class.
- */
 function getStatusClass(status) {
     const classes = {
         pending: "badge bg-warning text-dark",
