@@ -73,6 +73,8 @@ async function handleAnalyze() {
 
     document.getElementById("reviewerControls").classList.add("d-none");
 
+    currentAnalysis = null;
+
     try {
         currentAnalysis = await analyzeException(currentExceptionCode);
 
@@ -102,8 +104,11 @@ async function handleAnalyze() {
 
 async function handleDecision(decision) {
     if (
+        !currentException ||
         !currentAnalysis ||
         !currentAnalysis.id ||
+        currentAnalysis.exception_id !== currentException.id ||
+        !["pending", "analyzed"].includes(currentException.status) ||
         !canReview() ||
         !["approved", "rejected"].includes(decision)
     ) {
