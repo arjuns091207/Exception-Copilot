@@ -5,6 +5,10 @@ let currentExceptionCode = null;
 let currentException = null;
 let currentAnalysis = null;
 
+function normalizeStatus(status) {
+    return String(status || "").toLowerCase();
+}
+
 async function loadExceptionDetails() {
     const params = new URLSearchParams(window.location.search);
     currentExceptionCode = params.get("id");
@@ -61,7 +65,7 @@ function canReview() {
 async function handleAnalyze() {
     if (
         !currentException ||
-        ["approved", "rejected"].includes(currentException.status)
+        ["approved", "rejected"].includes(normalizeStatus(currentException.status))
     ) {
         return;
     }
@@ -91,7 +95,7 @@ async function handleAnalyze() {
 
         if (
             canReview() &&
-            ["pending", "analyzed"].includes(currentException.status)
+            ["pending", "analyzed"].includes(normalizeStatus(currentException.status))
         ) {
             document.getElementById("reviewerControls").classList.remove("d-none");
         }
@@ -105,7 +109,7 @@ async function handleAnalyze() {
     } finally {
         loading.classList.add("d-none");
         button.disabled =
-            ["approved", "rejected"].includes(currentException.status);
+            ["approved", "rejected"].includes(normalizeStatus(currentException?.status));
         button.textContent = "Analyze with AI";
     }
 }
@@ -116,7 +120,7 @@ async function handleDecision(decision) {
         !currentAnalysis ||
         !currentAnalysis.id ||
         currentAnalysis.exception_id !== currentException.id ||
-        !["pending", "analyzed"].includes(currentException.status) ||
+        !["pending", "analyzed"].includes(normalizeStatus(currentException.status)) ||
         !canReview() ||
         !["approved", "rejected"].includes(decision)
     ) {
@@ -244,7 +248,7 @@ function displayException(exception) {
         getStatusClass(exception.status);
 
     document.getElementById("analyzeButton").disabled =
-        ["approved", "rejected"].includes(exception.status);
+        ["approved", "rejected"].includes(normalizeStatus(exception.status));
 }
 
 function getSeverityClass(severity) {
@@ -255,7 +259,7 @@ function getSeverityClass(severity) {
         low: "badge bg-secondary"
     };
 
-    return classes[severity] || "badge bg-secondary";
+    return classes[normalizeStatus(severity)] || "badge bg-secondary";
 }
 
 function getStatusClass(status) {
@@ -271,5 +275,5 @@ function getStatusClass(status) {
         failed: "badge bg-danger"
     };
 
-    return classes[status] || "badge bg-secondary";
+    return classes[normalizeStatus(status)] || "badge bg-secondary";
 }
