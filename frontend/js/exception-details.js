@@ -59,6 +59,13 @@ function canReview() {
 }
 
 async function handleAnalyze() {
+    if (
+        !currentException ||
+        ["approved", "rejected"].includes(currentException.status)
+    ) {
+        return;
+    }
+
     const button = document.getElementById("analyzeButton");
     const loading = document.getElementById("analysisLoading");
     const error = document.getElementById("analysisError");
@@ -97,7 +104,8 @@ async function handleAnalyze() {
 
     } finally {
         loading.classList.add("d-none");
-        button.disabled = false;
+        button.disabled =
+            ["approved", "rejected"].includes(currentException.status);
         button.textContent = "Analyze with AI";
     }
 }
@@ -145,6 +153,8 @@ async function handleDecision(decision) {
 
         statusElement.textContent = decision.toUpperCase();
         statusElement.className = getStatusClass(decision);
+
+        document.getElementById("analyzeButton").disabled = true;
 
         success.textContent =
             result.message || `Exception ${decision} successfully.`;
@@ -232,6 +242,9 @@ function displayException(exception) {
 
     document.getElementById("status").className =
         getStatusClass(exception.status);
+
+    document.getElementById("analyzeButton").disabled =
+        ["approved", "rejected"].includes(exception.status);
 }
 
 function getSeverityClass(severity) {
