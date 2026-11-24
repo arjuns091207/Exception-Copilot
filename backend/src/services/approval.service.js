@@ -41,7 +41,12 @@ async function decideException({
         throw failure;
     }
 
-    if (!data) {
+    if (
+    !data ||
+    (typeof data === "object" &&
+        !Array.isArray(data) &&
+        Object.keys(data).length === 0)
+    ) {
         const failure = new Error("Approval decision returned no confirmation");
         failure.status = 500;
         throw failure;

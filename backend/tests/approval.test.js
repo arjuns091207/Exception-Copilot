@@ -173,3 +173,22 @@ test("uses a fallback message when the database error has no message", async () 
         }
     );
 });
+test("rejects an empty approval RPC response", async () => {
+    mock.method(supabase, "rpc", async () => ({
+        data: {},
+        error: null
+    }));
+
+    await assert.rejects(
+        approvalService.decideException({
+            exceptionCode: "EX-1001",
+            analysisId: "analysis-uuid",
+            userId: "reviewer-uuid",
+            decision: "approved"
+        }),
+        {
+            status: 500,
+            message: "Approval decision returned no confirmation"
+        }
+    );
+});
