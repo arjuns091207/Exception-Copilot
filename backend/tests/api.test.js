@@ -341,3 +341,53 @@ test("POST /api/exceptions/:code/decision rejects invalid decisions", async () =
     assert.equal(body.message, "Decision must be approved or rejected");
     assert.equal(rpcCalled, false);
 });
+
+test("POST /api/exceptions/:code/decision rejects non-string reasons", async () => {
+    mock.restoreAll();
+
+    mock.method(supabase.auth, "getUser", async () => ({
+        data: { user: { id: "reviewer-123", email: "reviewer@example.com" } },
+        error: null
+    }));
+
+    mock.method(supabase, "from", () => ({
+        select: () => ({
+            eq: () => ({
+                maybeSingle: async () => ({
+                    data: { id: "reviewer-123", role: "reviewer" },
+                    error: null
+                })
+            })
+        })
+    }));
+
+    let rpcCalled = false;
+
+    mock.method(supabase, "rpc", async () => {
+        rpcCalled = true;
+        return { data: null, error: null };
+    });
+
+    const response = await fetch(
+        `${baseUrl}/api/exceptions/EX-1001/decision`,
+        {
+            method: "POST",
+            headers: {
+                ...authHeaders,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                analysisId: "c31eeb13-3f0d-4ebd-83f2-49918866a388",
+                decision: "approved",
+                reason: 123
+            })
+        }
+    );
+
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(body.success, false);
+    assert.equal(body.message, "Reason must be a string");
+    assert.equal(rpcCalled, false);
+});
